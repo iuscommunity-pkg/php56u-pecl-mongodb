@@ -133,7 +133,7 @@ make -C NTS \
 install -D -m 644 %{ini_name} %{buildroot}%{php_inidir}/%{ini_name}
 
 # Install XML package description
-install -D -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{name}.xml
+install -D -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{pecl_name}.xml
 
 %if %{with zts}
 make -C ZTS \
@@ -168,7 +168,7 @@ OPT="-n"
 %files
 %license NTS/LICENSE
 %doc %{pecl_docdir}/%{pecl_name}
-%{pecl_xmldir}/%{name}.xml
+%{pecl_xmldir}/%{pecl_name}.xml
 
 %config(noreplace) %{php_inidir}/%{ini_name}
 %{php_extdir}/%{pecl_name}.so
@@ -182,6 +182,7 @@ OPT="-n"
 %changelog
 * Wed Aug 16 2017 Carl George <carl@george.computer> - 1.2.9-1.ius
 - Port from Fedora to IUS
+- Install package.xml as %%{pecl_name}.xml, not %%{name}.xml
 
 * Thu May  4 2017 Remi Collet <remi@remirepo.net> - 1.2.9-1
 - Update to 1.2.9
