@@ -1,3 +1,5 @@
+# IUS spec file for php56u-pecl-mongodb, forked from:
+#
 # Fedora spec file for php-pecl-mongodb
 # without SCL compatibility, from
 #
@@ -9,23 +11,25 @@
 #
 # Please, preserve the changelog entries
 #
-%global with_zts   0%{?__ztsphp:1}
 %global pecl_name  mongodb
 # After 40-smbclient.ini, see https://jira.mongodb.org/browse/PHPC-658
 %global ini_name   50-%{pecl_name}.ini
+%global php        php56u
+
+%bcond_without zts
 
 Summary:        MongoDB driver for PHP
-Name:           php-pecl-%{pecl_name}
+Name:           %{php}-pecl-%{pecl_name}
 Version:        1.2.9
-Release:        1%{?dist}
+Release:        1.ius%{?dist}
 License:        ASL 2.0
 Group:          Development/Languages
 URL:            http://pecl.php.net/package/%{pecl_name}
 Source0:        http://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
 
-BuildRequires:  php-devel > 5.4
-BuildRequires:  php-pear
-BuildRequires:  php-json
+BuildRequires:  %{php}-devel
+BuildRequires:  %{php}-pear
+BuildRequires:  %{php}-json
 BuildRequires:  cyrus-sasl-devel
 BuildRequires:  openssl-devel
 BuildRequires:  pkgconfig(libbson-1.0)    >= 1.6
@@ -33,11 +37,26 @@ BuildRequires:  pkgconfig(libmongoc-1.0)  >= 1.6
 
 Requires:       php(zend-abi) = %{php_zend_api}
 Requires:       php(api) = %{php_core_api}
-Requires:       php-json%{?_isa}
+Requires:       %{php}-json%{?_isa}
+
+# provide the stock name
+Provides:       php-pecl-%{pecl_name} = %{version}
+Provides:       php-pecl-%{pecl_name}%{?_isa} = %{version}
 
 # Don't provide php-mongodb which is the pure PHP library
+
+# provide the stock and IUS names in pecl() format
 Provides:       php-pecl(%{pecl_name})         = %{version}
 Provides:       php-pecl(%{pecl_name})%{?_isa} = %{version}
+Provides:       %{php}-pecl(%{pecl_name})         = %{version}
+Provides:       %{php}-pecl(%{pecl_name})%{?_isa} = %{version}
+
+# conflict with the stock name
+Conflicts:      php-pecl-%{pecl_name} < %{version}
+
+%{?filter_provides_in: %filter_provides_in %{php_extdir}/.*\.so$}
+%{?filter_provides_in: %filter_provides_in %{php_ztsextdir}/.*\.so$}
+%{?filter_setup}
 
 
 %description
@@ -55,17 +74,14 @@ sed -e 's/role="test"/role="src"/' \
     -e '/LICENSE/s/role="doc"/role="src"/' \
     -i package.xml
 
-cd NTS
-
 # Sanity check, really often broken
-extver=$(sed -n '/#define PHP_MONGODB_VERSION/{s/.* "//;s/".*$//;p}' php_phongo.h)
+extver=$(sed -n '/#define PHP_MONGODB_VERSION/{s/.* "//;s/".*$//;p}' NTS/php_phongo.h)
 if test "x${extver}" != "x%{version}%{?prever:%{prever}}"; then
    : Error: Upstream extension version is ${extver}, expecting %{version}%{?prever:%{prever}}.
    exit 1
 fi
-cd ..
 
-%if %{with_zts}
+%if %{with zts}
 # Duplicate source tree for NTS / ZTS build
 cp -pr NTS ZTS
 %endif
@@ -98,12 +114,14 @@ peclbuild() {
   make %{?_smp_mflags}
 }
 
-cd NTS
+pushd NTS
 peclbuild php
+popd
 
-%if %{with_zts}
-cd ../ZTS
+%if %{with zts}
+pushd ZTS
 peclbuild zts-php
+popd
 %endif
 
 
@@ -117,7 +135,7 @@ install -D -m 644 %{ini_name} %{buildroot}%{php_inidir}/%{ini_name}
 # Install XML package description
 install -D -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{name}.xml
 
-%if %{with_zts}
+%if %{with zts}
 make -C ZTS \
      install INSTALL_ROOT=%{buildroot}
 
@@ -134,14 +152,12 @@ done
 OPT="-n"
 [ -f %{php_extdir}/json.so ] && OPT="$OPT -d extension=json.so"
 
-cd NTS
 : Minimal load test for NTS extension
 %{__php} $OPT \
     --define extension=%{buildroot}%{php_extdir}/%{pecl_name}.so \
     --modules | grep %{pecl_name}
 
-%if %{with_zts}
-cd ../ZTS
+%if %{with zts}
 : Minimal load test for ZTS extension
 %{__ztsphp} $OPT \
     --define extension=%{buildroot}%{php_ztsextdir}/%{pecl_name}.so \
@@ -157,13 +173,16 @@ cd ../ZTS
 %config(noreplace) %{php_inidir}/%{ini_name}
 %{php_extdir}/%{pecl_name}.so
 
-%if %{with_zts}
+%if %{with zts}
 %config(noreplace) %{php_ztsinidir}/%{ini_name}
 %{php_ztsextdir}/%{pecl_name}.so
 %endif
 
 
 %changelog
+* Wed Aug 16 2017 Carl George <carl@george.computer> - 1.2.9-1.ius
+- Port from Fedora to IUS
+
 * Thu May  4 2017 Remi Collet <remi@remirepo.net> - 1.2.9-1
 - Update to 1.2.9
 
