@@ -17,6 +17,8 @@
 %global php        php56u
 
 %bcond_without zts
+%bcond_with libbson
+%bcond_with libmongoc
 
 Summary:        MongoDB driver for PHP
 Name:           %{php}-pecl-%{pecl_name}
@@ -32,8 +34,8 @@ BuildRequires:  %{php}-pear
 BuildRequires:  %{php}-json
 BuildRequires:  cyrus-sasl-devel
 BuildRequires:  openssl-devel
-BuildRequires:  pkgconfig(libbson-1.0)    >= 1.6
-BuildRequires:  pkgconfig(libmongoc-1.0)  >= 1.6
+%{?with_libbson:BuildRequires: pkgconfig(libbson-1.0) >= 1.6}
+%{?with_libmongoc:BuildRequires: pkgconfig(libmongoc-1.0) >= 1.6}
 
 Requires:       php(zend-abi) = %{php_zend_api}
 Requires:       php(api) = %{php_core_api}
@@ -105,13 +107,13 @@ peclbuild() {
 
   # Ensure we use system library
   # Need to be removed only after phpize because of m4_include
-  rm -r src/libbson
-  rm -r src/libmongoc
+  %{?with_libbson:rm -r src/libbson}
+  %{?with_libmongoc:rm -r src/libmongoc}
 
   %configure \
     --with-php-config=%{_bindir}/${1}-config \
-    --with-libbson \
-    --with-libmongoc \
+    %{?_with_libbson} \
+    %{?_with_libmongoc} \
     --enable-mongodb
 
   make %{?_smp_mflags}
@@ -197,6 +199,7 @@ fi
 - Port from Fedora to IUS
 - Install package.xml as %%{pecl_name}.xml, not %%{name}.xml
 - Re-add scriptlets (file triggers not yet available in EL)
+- Use bundled libbson and libmongoc
 
 * Thu May  4 2017 Remi Collet <remi@remirepo.net> - 1.2.9-1
 - Update to 1.2.9
