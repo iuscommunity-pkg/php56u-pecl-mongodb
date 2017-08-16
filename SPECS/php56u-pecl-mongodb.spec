@@ -39,6 +39,9 @@ Requires:       php(zend-abi) = %{php_zend_api}
 Requires:       php(api) = %{php_core_api}
 Requires:       %{php}-json%{?_isa}
 
+Requires(post): %{php}-pear
+Requires(postun): %{php}-pear
+
 # provide the stock name
 Provides:       php-pecl-%{pecl_name} = %{version}
 Provides:       php-pecl-%{pecl_name}%{?_isa} = %{version}
@@ -165,6 +168,16 @@ OPT="-n"
 %endif
 
 
+%post
+%{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
+
+
+%postun
+if [ $1 -eq 0 ]; then
+    %{pecl_uninstall} %{pecl_name} >/dev/null || :
+fi
+
+
 %files
 %license NTS/LICENSE
 %doc %{pecl_docdir}/%{pecl_name}
@@ -183,6 +196,7 @@ OPT="-n"
 * Wed Aug 16 2017 Carl George <carl@george.computer> - 1.2.9-1.ius
 - Port from Fedora to IUS
 - Install package.xml as %%{pecl_name}.xml, not %%{name}.xml
+- Re-add scriptlets (file triggers not yet available in EL)
 
 * Thu May  4 2017 Remi Collet <remi@remirepo.net> - 1.2.9-1
 - Update to 1.2.9
