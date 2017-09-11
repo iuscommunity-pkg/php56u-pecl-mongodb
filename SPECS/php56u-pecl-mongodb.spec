@@ -22,7 +22,7 @@
 
 Summary:        MongoDB driver for PHP
 Name:           %{php}-pecl-%{pecl_name}
-Version:        1.2.9
+Version:        1.2.10
 Release:        1.ius%{?dist}
 License:        ASL 2.0
 Group:          Development/Languages
@@ -195,6 +195,9 @@ fi
 
 
 %changelog
+* Mon Sep 11 2017 Carl George <carl@george.computer> - 1.2.10-1.ius
+- Latest upstream
+
 * Wed Aug 16 2017 Carl George <carl@george.computer> - 1.2.9-1.ius
 - Port from Fedora to IUS
 - Install package.xml as %%{pecl_name}.xml, not %%{name}.xml
